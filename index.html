@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe Keren Maksimal</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      color: #4a148c;
+      margin-bottom: 10px;
+    }
+
+    .scoreboard {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #6a1b9a;
+    }
+
+    .players {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .players input {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #999;
+      font-size: 16px;
+      width: 150px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 10px;
+      margin: 20px 0;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      font-size: 36px;
+      font-weight: bold;
+      color: #333;
+      border-radius: 15px;
+      border: 3px solid #6a1b9a;
+      background-color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.3s;
+    }
+
+    .cell:hover {
+      background-color: #f3e5f5;
+      transform: scale(1.05);
+    }
+
+    .cell.x { color: #1e88e5; }
+    .cell.o { color: #d32f2f; }
+
+    .winner {
+      background-color: #c8e6c9 !important;
+    }
+
+    #status {
+      font-size: 20px;
+      color: #4a148c;
+      margin-bottom: 20px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #7b1fa2;
+      color: white;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #6a1b9a;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe</h1>
+
+  <div class="players">
+    <input type="text" id="playerX" placeholder="Nama Pemain X">
+    <input type="text" id="playerO" placeholder="Nama Pemain O">
+    <button onclick="startGame()">Mulai</button>
+  </div>
+
+  <div class="scoreboard">
+    <div id="scoreX">X: 0</div>
+    <div id="scoreO">O: 0</div>
+  </div>
+
+  <div id="status">Masukkan nama pemain dan mulai!</div>
+  <div class="board" id="board"></div>
+
+  <div class="buttons">
+    <button onclick="resetBoard()">Putaran Baru</button>
+    <button onclick="restartGame()">Restart Semua</button>
+  </div>
+
+  <script>
+    const board = document.getElementById('board');
+    const status = document.getElementById('status');
+    const scoreX = document.getElementById('scoreX');
+    const scoreO = document.getElementById('scoreO');
+
+    let playerX = '', playerO = '';
+    let scores = { X: 0, O: 0 };
+    let currentPlayer = 'X';
+    let cells = Array(9).fill('');
+    let gameActive = false;
+
+    function startGame() {
+      playerX = document.getElementById('playerX').value || 'Player X';
+      playerO = document.getElementById('playerO').value || 'Player O';
+      scores = { X: 0, O: 0 };
+      updateScores();
+      resetBoard();
+      gameActive = true;
+    }
+
+    function updateScores() {
+      scoreX.textContent = `${playerX} (X): ${scores.X}`;
+      scoreO.textContent = `${playerO} (O): ${scores.O}`;
+    }
+
+    function resetBoard() {
+      cells = Array(9).fill('');
+      currentPlayer = 'X';
+      gameActive = true;
+      drawBoard();
+      updateStatus();
+    }
+
+    function restartGame() {
+      document.getElementById('playerX').value = '';
+      document.getElementById('playerO').value = '';
+      status.textContent = 'Masukkan nama pemain dan mulai!';
+      board.innerHTML = '';
+      scoreX.textContent = 'X: 0';
+      scoreO.textContent = 'O: 0';
+      gameActive = false;
+    }
+
+    function updateStatus() {
+      const player = currentPlayer === 'X' ? playerX : playerO;
+      status.textContent = `Giliran: ${player} (${currentPlayer})`;
+    }
+
+    function drawBoard() {
+      board.innerHTML = '';
+      cells.forEach((cell, index) => {
+        const div = document.createElement('div');
+        div.className = 'cell';
+        if (cell === 'X') div.classList.add('x');
+        if (cell === 'O') div.classList.add('o');
+        div.textContent = cell;
+        div.addEventListener('click', () => handleMove(index));
+        board.appendChild(div);
+      });
+    }
+
+    function handleMove(index) {
+      if (!gameActive || cells[index]) return;
+      cells[index] = currentPlayer;
+      drawBoard();
+
+      const winCombo = checkWinner();
+      if (winCombo) {
+        highlightWinner(winCombo);
+        const winnerName = currentPlayer === 'X' ? playerX : playerO;
+        status.textContent = `Pemenang: ${winnerName} (${currentPlayer})`;
+        scores[currentPlayer]++;
+        updateScores();
+        gameActive = false;
+      } else if (cells.every(c => c)) {
+        status.textContent = "Seri!";
+        gameActive = false;
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateStatus();
+      }
+    }
+
+    function checkWinner() {
+      const winPatterns = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (const [a,b,c] of winPatterns) {
+        if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+          return [a,b,c];
+        }
+      }
+      return null;
+    }
+
+    function highlightWinner(combo) {
+      const cellElements = board.querySelectorAll('.cell');
+      combo.forEach(index => {
+        cellElements[index].classList.add('winner');
+      });
+    }
+  </script>
+
+</body>
+</html>
